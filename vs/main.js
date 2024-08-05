@@ -429,7 +429,12 @@ worker.onmessage = (e) => {
         }
         cobra.drawPV(e.data.pv.slice(1));
 
-        worker.postMessage({type: 'suggest', depth: playingDepth, garbage: cobra.state.garbageQueue});
+        let g = [];
+        for (let i of cobra.state.garbageQueue) {
+            g.push(i.lines);
+        }
+
+        worker.postMessage({type: 'suggest', depth: playingDepth, garbage: g});
         waiting = true;
     }, duration)
 }

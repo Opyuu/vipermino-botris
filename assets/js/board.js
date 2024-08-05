@@ -72,7 +72,37 @@ function tetrioDamcalc(clear, tspin, combo, b2b){
     return Math.floor(lines);
 }
 
+function nuketrisDamcalc(clear, tspin, combo, b2b) {
+    if (clear === 0) return 0;
+    if (combo === -1) combo = 0;
+    if (b2b === -1) b2b = 0;
+
+    const comboGarbage = [
+        0, 0, 1, 1, 1, 2, 2, 3, 3, 4
+    ];
+
+    const attackTableBase = [
+        [0, 0, 1, 2, 4], // no spin
+        [0, 2, 4, 6, 10] // full spin
+    ];
+
+    let c;
+
+    if (b2b)
+        c = 1;
+    else
+        c = 0
+
+    console.log(clear, tspin, combo, b2b);
+
+    let l = attackTableBase[tspin][clear] + c + comboGarbage[Math.min(combo, 9)]
+    console.warn(l);
+    return attackTableBase[tspin][clear] + c + comboGarbage[Math.min(combo, 9)];
+}
+
 class GameState{
+    b2b = -1;
+    combo = -1;
     board = [];
     queue = [];
     garbageQueue = [];
@@ -186,10 +216,7 @@ class GameState{
             if (out + inc >= 3){
                 if (inc >= 2){
                     tspin = tspin_T.FULL;
-                } else{
-                    tspin = tspin_T.MINI;
                 }
-
                 if (tspinInfo.kickFive === true){
                     tspin = tspin_T.FULL;
                 }
@@ -220,7 +247,7 @@ class GameState{
             }
         }
 
-        if ((tspin === tspin_T.FULL && clear) || (tspin === tspin.MINI && clear) || lineCount === 4) {
+        if ((tspin === tspin_T.FULL && clear) || lineCount === 4) {
             this.b2b++;
         }
         else if (clear){
@@ -237,10 +264,15 @@ class GameState{
             this.pow = false;
             this.combo = -1;  // Reset combo
 
+            for (let i = 0; i < this.garbageQueue.length; ++i) {
+                this.garbageQueue[i].delay--;
+                console.log(this.garbageQueue[i]);
+            }
+
         } else{
             this.combo++;
             if (this.combo > 0) {
-                let lines = tetrioDamcalc(lineCount, tspin, this.combo, this.b2b);
+                let lines = nuketrisDamcalc(lineCount, tspin, this.combo, this.b2b);
 
                 if (lines > 5) {
                     this.pow = true;
@@ -252,9 +284,11 @@ class GameState{
             else if (this.b2b > 0) playerSounds["clearb2b"].play();
             else if (lineCount === 4) playerSounds["clearQuad"].play();
             else playerSounds["0combo"].play();
+
+            // lines cleared
         }
 
-        let lines = tetrioDamcalc(lineCount, tspin, this.combo, this.b2b);
+        let lines = nuketrisDamcalc(lineCount, tspin, this.combo, this.b2b);
         this.sendGarbage(lines);
 
         if (this.isEmpty()) {
@@ -314,23 +348,17 @@ class GameState{
 
     tankGarbage(bot=false){
         let undo = false;
+
         let total = 0;
 
-        while(total < 8 && this.garbageQueue.length !== 0){
+        while (this.garbageQueue.length !== 0) {
             let i = this.garbageQueue[0];
 
-            total += i;
+            if (i.delay > 0) break;
 
-            if (total > 8){
-                let excess = total - 8;
-                this.garbageQueue[0] = excess;
-                i -= excess;
-
-                undo = true;
-            } else{
-                this.garbageQueue.shift();
-            }
-            this.spawnGarbage(i, bot);
+            total += i.lines;
+            this.garbageQueue.shift();
+            this.spawnGarbage(i.lines, bot);
         }
 
         if (total > 0){
@@ -342,7 +370,10 @@ class GameState{
     }
 
     garbageIn(lines){
-        this.garbageQueue.push(lines);
+        this.garbageQueue.push({
+            lines: lines,
+            delay: 2
+        });
     }
 
     sendGarbage(lines){
@@ -476,7 +507,7 @@ class GameState{
         let garbageSum = 0;
 
         for (let i of this.garbageQueue){
-            garbageSum += i;
+            garbageSum += i.lines;
         }
 
         if (garbageSum === 0) return;
@@ -492,17 +523,12 @@ class GameState{
         let total = 0;
 
         for (let i of this.garbageQueue){
-            total += i;
+            total += i.lines;
             let ypos = 24 - total;
 
             graphics.moveTo(offset, ypos);
             graphics.lineTo(1 - 2*offset, ypos);
         }
-
-        // Garbage cap indicator
-        graphics.lineStyle(BORDER_SIZE/BLOCK_SIZE, GRID_COLOUR);
-        graphics.moveTo(offset, 24 - 8);
-        graphics.lineTo(1 - 2*offset, 24 - 8);
 
         graphics.endFill();
     }

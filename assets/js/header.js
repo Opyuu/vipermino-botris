@@ -49,8 +49,7 @@ const rotation_T = {
 
 const tspin_T = {
     NONE: 0,
-    MINI: 1,
-    FULL: 2
+    FULL: 1
 };
 
 class MinoInfo{
