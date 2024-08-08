@@ -194,7 +194,26 @@ class GameState{
     }
 
     checkTspin(tspinInfo){
-        let tspin = tspin_T.NONE;
+        let tspin = tspin_T.FULL;
+
+        if (tspinInfo.rotated === false) tspin = tspin_T.NONE;
+        let testPiece = this.activePiece;
+
+        testPiece.x++;
+        if (this.isValid(testPiece)) tspin = tspin_T.NONE;
+        testPiece.x -= 2;
+        if (this.isValid(testPiece)) tspin = tspin_T.NONE;
+
+        testPiece.x++;
+        testPiece.y++;
+        if (this.isValid(testPiece)) tspin = tspin_T.NONE;
+        testPiece.y -= 2;
+        if (this.isValid(testPiece)) tspin = tspin_T.NONE;
+        testPiece.y++;
+        return tspin;
+
+
+        // let tspin = tspin_T.NONE;
         if (this.activePiece.type === piece_T.T && tspinInfo.rotated === true){
             let out = 0; // Out facing corners, 3 corner rule
             let inc = 0; // In facing corners, 2 corner rule
@@ -266,7 +285,6 @@ class GameState{
 
             for (let i = 0; i < this.garbageQueue.length; ++i) {
                 this.garbageQueue[i].delay--;
-                console.log(this.garbageQueue[i]);
             }
 
         } else{
@@ -323,7 +341,7 @@ class GameState{
     }
 
     spawnPiece(){
-        this.activePiece = new ActivePiece(this.queue[0], 0, 4, 21);
+        this.activePiece = new ActivePiece(this.queue[0], 0, 4, 19);
         this.queue.shift();
     }
 
@@ -370,6 +388,9 @@ class GameState{
     }
 
     garbageIn(lines){
+        console.warn("Lines:", lines);
+        console.warn("Garbage queue: ", this.garbageQueue);
+
         this.garbageQueue.push({
             lines: lines,
             delay: 2
@@ -384,14 +405,14 @@ class GameState{
             this.outgoingGarbage.push(lines);
         } else{
             for (let i = 0; i < this.garbageQueue.length; i++){
-                let temp = this.garbageQueue[i];
-                this.garbageQueue[i] -= lines;
+                let temp = this.garbageQueue[i].lines;
+                this.garbageQueue[i].lines -= lines;
                 lines -= temp;
                 if (lines <= 0) break;
             }
 
             for (let i = 0; i < this.garbageQueue.length; i++){
-                this.garbageQueue[i] = Math.max(0, this.garbageQueue[i]);
+                this.garbageQueue[i].lines = Math.max(0, this.garbageQueue[i].lines);
             }
 
             lines = Math.max(0, lines);
@@ -503,7 +524,8 @@ class GameState{
     }
 
     drawGarbage(graphics){
-        const offset = (BORDER_SIZE/BLOCK_SIZE) / 2;
+        const offset = (BORDER_SIZE / BLOCK_SIZE) / 2;
+
         let garbageSum = 0;
 
         for (let i of this.garbageQueue){
@@ -522,6 +544,18 @@ class GameState{
         graphics.lineStyle((BORDER_SIZE/BLOCK_SIZE) / 2, 0xFFFFFF)
         let total = 0;
 
+        let delayed_2_count = 0;
+
+        for (let i of this.garbageQueue) {
+            if (i.delay !== 2) break;
+            delayed_2_count += i.lines;
+        }
+
+        // draw 2 delay to height
+        graphics.beginFill(0xFFAA00); // no idea what colour this is
+        graphics.drawRect(offset, ypos, 1 - 3 * offset, delayed_2_count);
+        graphics.endFill();
+
         for (let i of this.garbageQueue){
             total += i.lines;
             let ypos = 24 - total;
@@ -529,8 +563,6 @@ class GameState{
             graphics.moveTo(offset, ypos);
             graphics.lineTo(1 - 2*offset, ypos);
         }
-
-        graphics.endFill();
     }
 
     drawActive(graphics) {

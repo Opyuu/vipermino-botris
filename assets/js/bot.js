@@ -94,7 +94,7 @@ class Bot{
         this.state.activePiece.y = move.y;
         this.state.activePiece.rotation = move.rotation;
 
-        if (spin !== 0) {
+        if (spin !== false) {
             this.tspinInfo.rotated = true;
             if (spin === 1) this.tspinInfo.kickFive = true;
             playerSounds["spin"].play();

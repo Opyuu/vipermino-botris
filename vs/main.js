@@ -430,9 +430,11 @@ worker.onmessage = (e) => {
         cobra.drawPV(e.data.pv.slice(1));
 
         let g = [];
-        for (let i of cobra.state.garbageQueue) {
-            g.push(i.lines);
-        }
+        cobra.state.garbageQueue.forEach((i) => {
+            g.push(i);
+
+        });
+
 
         worker.postMessage({type: 'suggest', depth: playingDepth, garbage: g});
         waiting = true;
