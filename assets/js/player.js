@@ -140,8 +140,20 @@ class Player{
 
         let currentPiece = this.state.activePiece;
         if (currentPiece.type === piece_T.O) {
-            playerSounds["rotate"].play();
-            return;
+            let kickCoords = CW_KICKS_O[currentPiece.rotation];
+
+            currentPiece.rotation = (currentPiece.rotation + 1) % 4;
+            if (this.testRotate(kickCoords)) {
+                if (this.state.checkTspin(this.tspinCheck) !== tspin_T.NONE) playerSounds["spin"].play();
+
+                playerSounds["rotate"].play();
+                drawActive(this);
+                return true;
+            }
+
+            currentPiece.rotation = (currentPiece.rotation + 3) % 4;
+            drawActive(this);
+            return false;
         }
 
         let kickCoords = CW_KICKS[+(currentPiece.type === piece_T.I)][currentPiece.rotation];
@@ -165,9 +177,20 @@ class Player{
 
         let currentPiece = this.state.activePiece;
         if (currentPiece.type === piece_T.O) {
+            let kickCoords = CCW_KICKS_O[currentPiece.rotation];
 
-            playerSounds["rotate"].play();
-            return;
+            currentPiece.rotation = (currentPiece.rotation + 3) % 4;
+            if (this.testRotate(kickCoords)) {
+                if (this.state.checkTspin(this.tspinCheck) !== tspin_T.NONE) playerSounds["spin"].play();
+
+                playerSounds["rotate"].play();
+                drawActive(this);
+                return true;
+            }
+
+            currentPiece.rotation = (currentPiece.rotation + 1) % 4;
+            drawActive(this);
+            return false;
         }
 
         let kickCoords = CCW_KICKS[+(currentPiece.type === piece_T.I)][currentPiece.rotation];
