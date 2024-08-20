@@ -22,15 +22,14 @@ let seed = Date.now();
 game = new Bot(app, seed, seed, worker);
 
 let gameRunning = false;
+let stopping = false;
+
 let startTime = 0;
 let targetPPS = 3;
 
 let depth = 5;
 let playingDepth = 5;
 let ppsLimit  = 3;
-
-let waiting = false;
-let startAgain = false;
 
 let showSetting = false;
 let quit = false;
@@ -58,15 +57,12 @@ function init(){
 function play(){
     if (gameRunning) return;
 
-    if (quit || waiting) {
-        startAgain = true;
-
+    if (stopping) {
         document.getElementById("wait").style.display = "block";
-        return;
+        return
     }
 
     document.getElementById("wait").style.display = "none";
-
 
     gameRunning = true;
     init();
@@ -79,12 +75,10 @@ function play(){
     startTime = performance.now();
 
     worker.postMessage({type: 'suggest', depth: playingDepth});
-    quit = false;
     gameLoop();
 }
 
 function gameLoop(){
-
     if (!gameRunning) return;
 
     let t1 = performance.now();
@@ -108,12 +102,13 @@ function gameLoop(){
 }
 
 function stopGame(){
+    if (!gameRunning) return;
+
     let seed = Date.now();
+
+    stopping = true;
     gameRunning = false;
-    quit = true;
     game.destroy();
-
-
     game = new Bot(app, seed, seed, worker);
 }
 
@@ -124,22 +119,16 @@ function stopGame(){
 // },1000);
 
 worker.onmessage = (e) => {
-    waiting = false;
-
     document.getElementById("Score").innerHTML = "Score: " + e.data.score;
     document.getElementById("Reward").innerHTML = "Reward: " + e.data.reward;
 
-    if (quit) {
+    if (stopping) {
         worker.postMessage({type: 'quit'});
-        quit = false;
-        if (startAgain){
-            play();
-            startAgain = false;
-        }
+        gameRunning = false;
+        stopping = false;
         return;
     }
 
-    if (gameRunning === false) return;
     if (e.data.value === 0) return;
     if (e.data.type !== 'suggestion') return;
 
@@ -152,7 +141,13 @@ worker.onmessage = (e) => {
     let duration = ((game.pieceCount + 1) / targetPPS * 1000) - t;
 
     setTimeout(() => {
-        if (!gameRunning) return;
+        if (stopping) {
+            worker.postMessage({type: 'quit'});
+            gameRunning = false;
+            stopping = false;
+            return;
+        }
+
         if (move.piece === game.state.heldPiece) game.hold();
 
         game.movePiece(move, spin);
@@ -161,6 +156,5 @@ worker.onmessage = (e) => {
         game.drawPV(e.data.pv.slice(1));
 
         worker.postMessage({type: 'suggest', depth: playingDepth});
-        waiting = true;
     }, duration)
 }

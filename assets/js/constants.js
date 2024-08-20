@@ -29,7 +29,7 @@ const ENCODE_TABLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345
 const CONNECTED_TEXTURES = [];
 
 for(let piece = 0; piece < 8; piece++){
-    const baseConnectedTexture = PIXI.Texture.from('/vipermino/assets/sprites/connected.png')
+    const baseConnectedTexture = PIXI.Texture.from('/vipermino-botris/assets/sprites/connected.png')
     CONNECTED_TEXTURES[piece + 1] = [];
     for (let mino = 0; mino < 4; mino++){
         const show = new PIXI.Rectangle(piece * 32, mino * 32, 32, 32);
@@ -43,8 +43,8 @@ scalingMatrix.scale(1/BLOCK_SIZE, 1/BLOCK_SIZE);
 
 const FPS_DELTA = 1000/60;
 
-let baseShadowTexture = PIXI.Texture.from('/vipermino/assets/sprites/shadowsprites.png')
-let basePieceTexture = PIXI.Texture.from('/vipermino/assets/sprites/piecesprite.png')
+let baseShadowTexture = PIXI.Texture.from('/vipermino-botris/assets/sprites/shadowsprites.png')
+let basePieceTexture = PIXI.Texture.from('/vipermino-botris/assets/sprites/piecesprite.png')
 
 for(let i = 0; i < 8; i++){
     const show = new PIXI.Rectangle(i * 32, 0, 32, 32);
@@ -66,7 +66,7 @@ for(let i = 1; i <= 8; i++){
 
 
 for (let i = 0; i < 8; i++){
-    const baseTexture = PIXI.Texture.from('/vipermino/assets/sprites/connectedshadow.png');
+    const baseTexture = PIXI.Texture.from('/vipermino-botris/assets/sprites/connectedshadow.png');
     PV_TEXTURE[i + 1] = [];
     for (let mino = 0; mino < 4; mino++){
         const show = new PIXI.Rectangle(i * 32, mino * 32, 32, 32);
